@@ -5,6 +5,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
@@ -47,41 +49,87 @@ public class ServerWorker extends Thread {
                 String cmd = tokens[0];
                 if ("logoff".equals(cmd) || "quit".equalsIgnoreCase(cmd)) {
                     handleLogoff();
-
                     break;
                 } else if ("login".equalsIgnoreCase(cmd)) {
                     handleLogin(outputStream, tokens);
-
                 } else if ("msg".equalsIgnoreCase(cmd)) {
                     String[] tokensMsg = StringUtils.split(line, null, 3);
                     handleMessage(tokensMsg);
                 } else if ("join".equalsIgnoreCase(cmd)) {
                     handleJoin(tokens);
+                } else if ("leave".equalsIgnoreCase(cmd)) {
+                    handleLeave(tokens);
+                }
+                    else if ("date".equalsIgnoreCase(cmd)){
+                    hanlderData();
+                    }
 
-                    }else if ("leave".equalsIgnoreCase(cmd)) {
-                        handleLeave(tokens);
+                else if ("time".equalsIgnoreCase(cmd)){
+                    hanlderTime();
+                }
 
+                else if ("shave".equalsIgnoreCase(cmd)){
+                    hanlderShaver();
+                }
+                else if ("f*ck".equalsIgnoreCase(cmd)){
+                    hanlderfck();
+                }
+                else if ("tie".equalsIgnoreCase(cmd)){
+                    hanlderTie();
+                }
+                else if ("remove-pregnancy".equalsIgnoreCase(cmd)){
+                    hanlderRemover();
+                }
 
-
-
-
-                } else {
+                    else {
                     String msg = "unknown " + cmd + "\n";
                     outputStream.write(msg.getBytes());
                 }
-
             }
         }
         clientSocket.close();
     }
 
-    private void handleLeave(String[] tokens) {
-        if (tokens.length > 1) {
-            String topic = tokens[1];
-            topicSet.remove(topic);
-        }
+
+
+    private void hanlderShaver() throws IOException{
+        String shave = "> OK... relax and hold still... \n";
+        outputStream.write(shave.getBytes());
+    }
+
+    private void hanlderfck() throws IOException{
+        String fck = "> Ooooh Mama!\n> Hubba hubba!\n";
+        outputStream.write(fck.getBytes());
+    }
+
+    private void hanlderTie() throws IOException{
+        String tie = "> Go ask your father\n";
+        outputStream.write(tie.getBytes());
+    }
+
+    private void hanlderRemover() throws IOException{
+        String remove = "> Duuude...that's illegal!\n";
+        outputStream.write(remove.getBytes());
+    }
+
+
+
+    private void hanlderData() throws IOException {
+    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+    Date date = new Date();
+    String showDate = sdf.format(date) + "\n";
+    outputStream.write(showDate.getBytes());
+
+}
+
+    private void hanlderTime() throws IOException {
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        Date date = new Date();
+        String showDate = sdf.format(date) + "\n";
+        outputStream.write(showDate.getBytes());
 
     }
+
 
     public boolean isMemberOfTopic(String topic) {
         return topicSet.contains(topic);
@@ -91,10 +139,14 @@ public class ServerWorker extends Thread {
         if (tokens.length > 1) {
             String topic = tokens[1];
             topicSet.add(topic);
-
-
         }
+    }
 
+    private void handleLeave(String[] tokens) {
+        if (tokens.length > 1) {
+            String topic = tokens[1];
+            topicSet.remove(topic);
+        }
     }
 
 
@@ -113,25 +165,25 @@ public class ServerWorker extends Thread {
                     String outMsg = sendTo + " " + login + ": " + msgText + "\n";
                     worker.send(outMsg);
                 }
-        } else{
-            if (sendTo.equalsIgnoreCase(worker.getLogin())) {
-                String outMsg = login + ": " + msgText + "\n";
-                worker.send(outMsg);
+            } else {
+                if (sendTo.equalsIgnoreCase(worker.getLogin())) {
+                    String outMsg = login + ": " + msgText + "\n";
+                    worker.send(outMsg);
+                }
             }
         }
-    }
 
 
     }
 
-    private void handleLogoff() throws IOException{
+    private void handleLogoff() throws IOException {
         server.removeWorker(this);
 
         List<ServerWorker> workerList = server.getWorkerList();
 
 
         //send other online users urrent users status
-        String onlineMsg = "offline " + login + "\n";
+        String onlineMsg = "> offline " + login + "\n";
         for (ServerWorker worker : workerList) {
             if (!login.equals(worker.getLogin())) {
                 worker.send(onlineMsg);
@@ -147,32 +199,32 @@ public class ServerWorker extends Thread {
     }
 
     private void handleLogin(OutputStream outputStream, String[] tokens) throws IOException {
-        if (tokens.length == 3) {
+        if (tokens.length == 2) {
             String login = tokens[1];
-            String password = tokens[2];
+            //String password = tokens[2];
 
-            if ( (login.equals("tom") && password.equals("tom")) || (login.equals("jim") && password.equals("jim"))  ) {
-               String msg = "welcome!\n";
-               outputStream.write(msg.getBytes());
-               this.login = login;
-               System.out.println("User:<" + login + "> logged in succesfully \n");
+            //hardcoded logins
+            if (login.equals("tom") || login.equals("jim") || login.equals("test")) {
+                String msg = "> welcome!\n";
+                outputStream.write(msg.getBytes());
+                this.login = login;
+                System.out.println("> User:<" + login + "> logged in succesfully \n");
 
 
                 List<ServerWorker> workerList = server.getWorkerList();
 
                 //send current user all other online loggins
                 for (ServerWorker worker : workerList) {
-                    if (worker.getLogin() !=null) {
+                    if (worker.getLogin() != null) {
                         if (!login.equals(worker.getLogin())) {
-                            String msg2 = "Online " + worker.getLogin() + "\n";
+                            String msg2 = "> Online " + worker.getLogin() + "\n";
                             send(msg2);
                         }
                     }
 
                 }
-
                 //send other online users urrent users status
-                String onlineMsg = "online " + login + "\n";
+                String onlineMsg = "> online " + login + "\n";
                 for (ServerWorker worker : workerList) {
                     if (!login.equals(worker.getLogin())) {
                         worker.send(onlineMsg);
@@ -180,12 +232,11 @@ public class ServerWorker extends Thread {
                 }
 
             } else {
-                 String msg = "invalid login or password!\n";
-               outputStream.write(msg.getBytes());
+                String msg = "> invalid login or password!\n";
+                outputStream.write(msg.getBytes());
             }
         }
     }
-
     private void send(String msg) throws IOException {
         if (login != null) {
             outputStream.write(msg.getBytes());
